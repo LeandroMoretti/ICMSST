@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Urbban.io - Automação ICMS</title>
+  <!-- Importação de fontes, Tailwind, ApexCharts e FontAwesome -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    window.FontAwesomeConfig = { autoReplaceSvg: true };
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <!-- Estilos Globais -->
+  <style>
+    * { font-family: "Inter", sans-serif; }
+    ::-webkit-scrollbar { display: none; }
+    .highlighted-section { outline: 2px solid #3F20FB; background-color: rgba(63, 32, 251, 0.1); }
+    .edit-button { position: absolute; z-index: 1000; }
+    .ai-response {
+      white-space: pre-line;
+      min-height: 60px;
+      overflow-x: auto;
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+      word-break: break-word;
+    }
+    #chat-messages p { font-size: 0.875rem; }
+    .small-text { font-size: 0.75rem; }
+  </style>
+
+  <!-- Variáveis CSS (Light Theme) -->
+  <style>
+    :root {
+      --color-base: #ffffff;
+      --color-base-50: #f9fafb;
+      --color-base-100: #f3f4f6;
+      --color-base-200: #e5e7eb;
+      --color-base-300: #d1d5db;
+      --color-base-400: #9ca3af;
+      --color-base-500: #6b7280;
+      --color-base-600: #4b5563;
+      --color-base-700: #374151;
+      --color-base-800: #1f2937;
+      --color-base-900: #111827;
+      --color-base-content: #1f2937;
+      /* Primary colors */
+      --color-primary: #3b82f6;
+      --color-primary-50: #eff6ff;
+      --color-primary-100: #dbeafe;
+      --color-primary-200: #bfdbfe;
+      --color-primary-300: #93c5fd;
+      --color-primary-400: #60a5fa;
+      --color-primary-500: #3b82f6;
+      --color-primary-600: #2563eb;
+      --color-primary-700: #1d4ed8;
+      --color-primary-800: #1e40af;
+      --color-primary-900: #1e3a8a;
+      --color-primary-focus: #2563eb;
+      --color-primary-content: #ffffff;
+    }
+  </style>
+
+  <!-- Tailwind Config -->
+  <script>
+    tailwind.config = {
+      theme: { extend: {} },
+      variants: { extend: { backgroundColor: ['active', 'group-hover'], textColor: ['active', 'group-hover'] } },
+      plugins: []
+    };
+  </script>
+</head>
+<body class="h-full text-base-content">
+  <!-- Seção de Autenticação: Login, Cadastro e Reset de Senha -->
+  <div id="auth">
+    <!-- Instância 1: Login -->
+    <div id="instance-login">
+      <div class="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex items-center justify-center p-4">
+        <div id="login-container" class="w-full max-w-md">
+          <div id="login-card" class="bg-white rounded-2xl shadow-xl p-8">
+            <div id="logo-section" class="text-center mb-8">
+              <div class="flex justify-center items-center mb-4">
+                <span class="text-2xl font-bold text-black">Urbban.io</span>
+              </div>
+              <h2 class="text-lg text-gray-600">Bem-vindo !</h2>
+            </div>
+            <div id="login-form" class="space-y-6">
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <i class="fa-regular fa-user text-gray-400"></i>
+                </div>
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="Digite seu e-mail ou nome de usuário"
+                  class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                />
+              </div>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <i class="fa-solid fa-lock text-gray-400"></i>
+                </div>
+                <input
+                  id="password"
+                  type="password"
+                  placeholder="Digite sua senha"
+                  class="w-full pl-10 pr-10 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                />
+                <button id="toggleLoginPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center" type="button">
+                  <i id="toggleLoginPasswordIcon" class="fa-regular fa-eye text-gray-400"></i>
+                </button>
+              </div>
+              <div class="text-right">
+                <span id="forgot-password" class="text-sm text-blue-600 hover:text-blue-800 cursor-pointer">Esqueceu a senha?</span>
+              </div>
+              <button
+                type="button"
+                id="login-button"
+                class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition duration-200"
+              >
+                Entrar
+              </button>
+            </div>
+            <div id="signup-section" class="mt-8 text-center">
+              <p class="text-gray-600">
+                Ainda não tem uma conta?
+                <span id="show-signup" class="text-blue-600 hover:text-blue-800 font-medium cursor-pointer">Cadastre-se aqui</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Instância 2: Cadastro -->
+    <div id="instance-signup" style="display:none;">
+      <div class="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex items-center justify-center p-4">
+        <div id="signup-container" class="w-full max-w-md">
+          <div id="signup-card" class="bg-white rounded-2xl shadow-xl p-8">
+            <div id="logo-section" class="text-center mb-8">
+              <div class="flex justify-center items-center mb-4">
+                <span class="text-2xl font-bold text-black">Urbban.io</span>
+              </div>
+              <h2 class="text-lg text-gray-600">Criar nova conta</h2>
+            </div>
+            <div id="signup-form" class="space-y-6">
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <i class="fa-regular fa-user text-gray-400"></i>
+                </div>
+                <input
+                  id="signup-name"
+                  type="text"
+                  placeholder="Digite seu nome completo"
+                  class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                />
+              </div>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <i class="fa-regular fa-envelope text-gray-400"></i>
+                </div>
+                <input
+                  id="signup-email"
+                  type="email"
+                  placeholder="Digite seu e-mail"
+                  class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                />
+              </div>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <i class="fa-solid fa-lock text-gray-400"></i>
+                </div>
+                <input
+                  id="signup-password"
+                  type="password"
+                  placeholder="Crie sua senha"
+                  class="w-full pl-10 pr-10 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                />
+                <button id="toggleSignupPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center" type="button">
+                  <i id="toggleSignupPasswordIcon" class="fa-regular fa-eye text-gray-400"></i>
+                </button>
+              </div>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <i class="fa-solid fa-lock text-gray-400"></i>
+                </div>
+                <input
+                  id="signup-password-confirm"
+                  type="password"
+                  placeholder="Confirme sua senha"
+                  class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                />
+              </div>
+              <button
+                type="button"
+                id="signup-button"
+                class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition duration-200"
+              >
+                Criar conta
+              </button>
+            </div>
+            <div id="login-section" class="mt-8 text-center">
+              <p class="text-gray-600">
+                Já tem uma conta?
+                <span id="show-login" class="text-blue-600 hover:text-blue-800 font-medium cursor-pointer">Faça login aqui</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Instância 3: Reset de Senha -->
+    <div id="reset-password-page" style="display:none;">
+      <div class="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-4">
+        <div id="reset-password-container" class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 relative overflow-hidden">
+          <div id="logo-section" class="text-center mb-8">
+            <div class="flex justify-center items-center mb-4">
+              <span class="text-2xl font-bold text-black">Urbban.io</span>
+            </div>
+            <h2 class="text-lg text-gray-600">Bem-vindo !</h2>
+          </div>
+          <form id="reset-password-form" class="space-y-6">
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <i class="fa-regular fa-envelope text-gray-400"></i>
+              </div>
+              <input
+                type="email"
+                id="reset-email"
+                name="reset-email"
+                placeholder="Digite seu e-mail"
+                class="block w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all"
+                required
+              />
+            </div>
+            <div id="new-password-field" class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <i class="fa-regular fa-lock text-gray-400"></i>
+              </div>
+              <input
+                type="password"
+                name="new-password"
+                id="new-password"
+                placeholder="Digite sua nova senha"
+                class="block w-full pl-10 pr-10 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all"
+                required
+              >
+              <button type="button" id="toggleResetNewPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                <i id="toggleResetNewPasswordIcon" class="fa-regular fa-eye text-gray-400"></i>
+              </button>
+            </div>
+            <div id="confirm-password-field" class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <i class="fa-regular fa-lock text-gray-400"></i>
+              </div>
+              <input
+                type="password"
+                name="confirm-password"
+                id="confirm-password"
+                placeholder="Confirme sua nova senha"
+                class="block w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all"
+                required
+              >
+            </div>
+            <button
+              type="submit"
+              id="reset-button"
+              class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center gap-2"
+            >
+              <span>Redefinir senha</span>
+              <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </form>
+          <div id="back-to-login" class="text-center mt-8">
+            <a
+              id="reset-back-login"
+              class="text-gray-600 hover:text-blue-600 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <i class="fa-solid fa-arrow-left"></i>
+              <span>Voltar para o login</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Fim da seção de Autenticação -->
+
+  <!-- Seção Operacional do Aplicativo -->
+  <div id="operational-app" style="display:none;">
+    <div class="min-h-screen bg-gray-50 flex">
+      <!-- Sidebar -->
+      <div id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-white shadow-lg">
+        <div class="flex items-center justify-center h-16 border-b">
+          <span class="text-xl font-bold text-blue-600">Automação ICMS</span>
+        </div>
+        <nav class="mt-10">
+          <div class="px-4 space-y-8">
+            <a href="#" class="nav-link flex items-center px-4 py-3 text-blue-600 bg-blue-50 rounded-lg" data-target="screen-dashboard">
+              <i class="fa-solid fa-house mr-3"></i>
+              <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-link flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg" data-target="screen-chat">
+              <i class="fa-solid fa-robot mr-3"></i>
+              <span>RICMS MG</span>
+            </a>
+            <a href="#" class="nav-link flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg" data-target="screen-users">
+              <i class="fa-solid fa-users mr-3"></i>
+              <span>Usuários</span>
+            </a>
+            <a href="#" class="nav-link flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg" data-target="screen-icms">
+              <i class="fa-solid fa-calculator mr-3"></i>
+              <span>ICMS ST</span>
+            </a>
+            <a href="#" class="nav-link flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg" data-target="screen-st">
+              <i class="fa-solid fa-chart-line mr-3"></i>
+              <span>Cálculo ST</span>
+            </a>
+          </div>
+        </nav>
+      </div>
+      
+      <!-- Área principal -->
+      <div class="ml-64 w-full">
+        <!-- Cabeçalho -->
+        <header id="header" class="bg-white shadow-sm">
+          <div class="flex items-center justify-between px-8 h-16">
+            <div class="flex items-center w-96">
+              <span id="datetime" class="ml-3 text-gray-600"></span>
+            </div>
+            <div class="flex items-center space-x-4">
+              <button class="p-2 text-gray-400 hover:text-gray-600">
+                <i class="fa-regular fa-bell text-xl"></i>
+              </button>
+              <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg" alt="Profile" class="w-8 h-8 rounded-full">
+            </div>
+          </div>
+        </header>
+        <!-- Conteúdo dinâmico -->
+        <div id="content-area">
+          <!-- Tela 1: Dashboard -->
+          <div id="screen-dashboard" class="p-8" style="display: block;">
+            <section id="welcome-section" class="mb-8">
+              <h1 class="text-2xl font-bold text-gray-800">Olá, João! O que deseja fazer hoje?</h1>
+            </section>
+            <section id="quick-stats" class="grid grid-cols-4 gap-6 mb-8">
+              <div class="bg-white p-6 rounded-xl shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="font-semibold text-gray-600">Consultas ICMS</h3>
+                  <span class="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                    <i class="fa-solid fa-calculator"></i>
+                  </span>
+                </div>
+                <p class="text-2xl font-bold">1,234</p>
+                <p class="text-green-500 text-sm mt-2">
+                  <i class="fa-solid fa-arrow-up"></i> +12.5%
+                </p>
+              </div>
+              <div class="bg-white p-6 rounded-xl shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="font-semibold text-gray-600">Cálculos ST</h3>
+                  <span class="p-2 bg-purple-100 text-purple-600 rounded-lg">
+                    <i class="fa-solid fa-chart-simple"></i>
+                  </span>
+                </div>
+                <p class="text-2xl font-bold">856</p>
+                <p class="text-green-500 text-sm mt-2">
+                  <i class="fa-solid fa-arrow-up"></i> +8.2%
+                </p>
+              </div>
+              <div class="bg-white p-6 rounded-xl shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="font-semibold text-gray-600">Interações IA</h3>
+                  <span class="p-2 bg-green-100 text-green-600 rounded-lg">
+                    <i class="fa-solid fa-robot"></i>
+                  </span>
+                </div>
+                <p class="text-2xl font-bold">3,567</p>
+                <p class="text-green-500 text-sm mt-2">
+                  <i class="fa-solid fa-arrow-up"></i> +15.8%
+                </p>
+              </div>
+              <div class="bg-white p-6 rounded-xl shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="font-semibold text-gray-600">Usuários Ativos</h3>
+                  <span class="p-2 bg-orange-100 text-orange-600 rounded-lg">
+                    <i class="fa-solid fa-users"></i>
+                  </span>
+                </div>
+                <p class="text-2xl font-bold">289</p>
+                <p class="text-green-500 text-sm mt-2">
+                  <i class="fa-solid fa-arrow-up"></i> +5.3%
+                </p>
+              </div>
+            </section>
+            <section id="charts-section" class="grid grid-cols-2 gap-6">
+              <div class="bg-white p-6 rounded-xl shadow-sm">
+                <h3 class="font-semibold text-gray-800 mb-4">Uso Mensal da Aplicação</h3>
+                <div class="h-64 bg-gray-50 rounded-lg"></div>
+              </div>
+              <div class="bg-white p-6 rounded-xl shadow-sm">
+                <h3 class="font-semibold text-gray-800 mb-4">Consultas Frequentes</h3>
+                <div class="h-64 bg-gray-50 rounded-lg"></div>
+              </div>
+            </section>
+          </div>
+          <!-- Tela 2: Chat / RICMS MG -->
+          <div id="screen-chat" class="p-8" style="display: none;">
+            <section id="welcome-section" class="mb-8">
+              <h1 class="text-2xl font-bold text-gray-800">Consulte a legislação do ICMS de Minas Gerais</h1>
+              <p class="text-gray-600 mt-2">Urbban.io</p>
+            </section>
+            <section id="chat-area" class="bg-white rounded-xl shadow-sm h-[600px] flex flex-col">
+              <div id="chat-messages" class="flex-1 overflow-y-auto p-6 space-y-2">
+                <div class="flex items-start max-w-3xl mb-2">
+                  <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-4">
+                    <i class="fa-solid fa-robot text-blue-600"></i>
+                  </div>
+                  <div class="bg-gray-100 rounded-2xl rounded-tl-none p-4 ai-response">
+                    <p class="text-gray-800">Olá! Como posso ajudar você hoje com suas dúvidas sobre impostos?</p>
+                  </div>
+                </div>
+              </div>
+              <div id="chat-input" class="p-4 border-t">
+                <div id="attachment-preview" class="mb-2 flex justify-start"></div>
+                <div class="flex items-center bg-gray-50 rounded-xl p-2">
+                  <button id="attach-file-button" class="p-2 text-gray-400 hover:text-gray-600" type="button">
+                    <i class="fa-solid fa-paperclip"></i>
+                  </button>
+                  <input type="file" id="xml-file-input" style="display: none;" accept=".xml">
+                  <input id="user-input" type="text" placeholder="Digite sua mensagem..." class="flex-1 bg-transparent px-4 py-2 outline-none">
+                  <button class="p-2 text-gray-400 hover:text-gray-600" type="button">
+                    <i class="fa-solid fa-microphone"></i>
+                  </button>
+                  <button id="send-btn" class="ml-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700" type="button">
+                    <i class="fa-solid fa-paper-plane"></i>
+                  </button>
+                </div>
+              </div>
+            </section>
+          </div>
+          <!-- Tela 3: Cadastro de Usuários -->
+          <div id="screen-users" class="p-8" style="display: none;">
+            <!-- ... restante da tela de usuários ... -->
+          </div>
+          <!-- Tela 4: Consulta ICMS -->
+          <div id="screen-icms" class="p-8" style="display: none;">
+            <!-- ... restante da tela de ICMS ... -->
+          </div>
+          <!-- Tela 5: Cálculo ST -->
+          <div id="screen-st" class="p-8" style="display: none;">
+            <!-- ... restante da tela de Cálculo ST ... -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Fim da seção Operacional -->
+
+  <!-- Pop-up Customizado (para exibir a mensagem no centro da tela) -->
+  <div id="custom-alert-container" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div id="custom-alert-box" class="bg-white p-6 rounded shadow-lg text-center max-w-md mx-auto">
+      <p id="custom-alert-message" class="text-gray-800"></p>
+      <button
+        id="custom-alert-close"
+        class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+      >
+        Fechar
+      </button>
+    </div>
+  </div>
+
+  <!-- Script principal -->
+  <script>
+    // Endpoint usado para Login/Cadastro/Reset de Senha e para o Chat (todas via POST)
+    const endpointUser = "https://primary-production-5119.up.railway.app/webhook-test/login/3825d84d-6b32-47d3-b34f-ac6c85bf92eb";
+
+    function init() {
+      console.log("Init function started");
+
+      // Função auxiliar para exibir pop-up customizado com callback onClose
+      function showCustomAlert(message, onClose) {
+        const alertContainer = document.getElementById('custom-alert-container');
+        document.getElementById('custom-alert-message').textContent = message;
+        alertContainer.classList.remove('hidden');
+        const closeButton = document.getElementById('custom-alert-close');
+        closeButton.onclick = function() {
+          alertContainer.classList.add('hidden');
+          if (onClose) onClose();
+        };
+      }
+
+      function clearLoginFields() {
+        document.getElementById('email').value = "";
+        document.getElementById('password').value = "";
+      }
+      function clearSignupFields() {
+        document.getElementById('signup-name').value = "";
+        document.getElementById('signup-email').value = "";
+        document.getElementById('signup-password').value = "";
+        document.getElementById('signup-password-confirm').value = "";
+      }
+      function clearResetFields() {
+        document.getElementById('reset-email').value = "";
+        document.getElementById('new-password').value = "";
+        document.getElementById('confirm-password').value = "";
+      }
+
+      const instanceLogin = document.getElementById('instance-login');
+      const instanceSignup = document.getElementById('instance-signup');
+      const instanceReset = document.getElementById('reset-password-page');
+
+      const showSignup = document.getElementById('show-signup');
+      const showLogin = document.getElementById('show-login');
+      const forgotPassword = document.getElementById('forgot-password');
+      const resetBackLogin = document.getElementById('reset-back-login');
+
+      if (forgotPassword) {
+        forgotPassword.addEventListener('click', function(event) {
+          event.preventDefault();
+          clearLoginFields();
+          instanceLogin.style.display = 'none';
+          instanceReset.style.display = 'block';
+        });
+      }
+      if (resetBackLogin) {
+        resetBackLogin.addEventListener('click', function(event) {
+          event.preventDefault();
+          clearResetFields();
+          instanceReset.style.display = 'none';
+          instanceLogin.style.display = 'block';
+        });
+      }
+      if (showSignup) {
+        showSignup.addEventListener('click', function(event) {
+          event.preventDefault();
+          clearLoginFields();
+          clearSignupFields();
+          instanceLogin.style.display = 'none';
+          instanceSignup.style.display = 'block';
+        });
+      }
+      if (showLogin) {
+        showLogin.addEventListener('click', function(event) {
+          event.preventDefault();
+          clearSignupFields();
+          clearLoginFields();
+          instanceSignup.style.display = 'none';
+          instanceLogin.style.display = 'block';
+        });
+      }
+
+      // Função auxiliar para chamadas POST (para login, cadastro e reset)
+      function callWebhookPOST(paramsObject) {
+        return fetch(endpointUser, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(paramsObject)
+        })
+        .then(response => response.json());
+      }
+
+      // ============ LOGIN (via POST) ============
+      const loginButton = document.getElementById('login-button');
+      if (loginButton) {
+        loginButton.onclick = function(e) {
+          e.preventDefault();
+          console.log("Botão de login clicado.");
+          const loginData = {
+            condicao: "login",
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value
+          };
+          callWebhookPOST(loginData)
+            .then(data => {
+              console.log('Resposta do webhook (Login):', data);
+              if (data.message === "Credenciais inválidas") {
+                showCustomAlert("Email ou senha inválidos", function() {
+                  instanceLogin.style.display = 'block';
+                  document.getElementById('operational-app').style.display = 'none';
+                });
+              } else {
+                instanceLogin.style.display = 'none';
+                document.getElementById('operational-app').style.display = 'block';
+              }
+            })
+            .catch(error => {
+              console.error('Erro ao chamar o webhook de login (POST):', error);
+            });
+        };
+      }
+
+      // ============ CADASTRO (via POST) ============
+      const signupButton = document.getElementById('signup-button');
+      if (signupButton) {
+        signupButton.onclick = function(e) {
+          e.preventDefault();
+          const signupData = {
+            condicao: "cadastro",
+            name: document.getElementById('signup-name').value,
+            email: document.getElementById('signup-email').value,
+            password: document.getElementById('signup-password').value
+          };
+          callWebhookPOST(signupData)
+            .then(data => {
+              console.log('Resposta do webhook (Cadastro):', data);
+              if (data.error === true) {
+                showCustomAlert(data.message, function() {});
+              } else {
+                showCustomAlert(data.message, function() {
+                  clearSignupFields();
+                  instanceSignup.style.display = 'none';
+                  instanceLogin.style.display = 'block';
+                });
+              }
+            })
+            .catch(error => {
+              console.error('Erro ao chamar o webhook de cadastro (POST):', error);
+            });
+        };
+      }
+
+      // ============ RESET DE SENHA (via POST) ============
+      const resetForm = document.getElementById('reset-password-form');
+      if (resetForm) {
+        resetForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const email = document.getElementById('reset-email').value;
+          const newPassword = document.getElementById('new-password').value;
+          const confirmPassword = document.getElementById('confirm-password').value;
+          if (newPassword !== confirmPassword) {
+            showCustomAlert('As senhas não conferem.');
+            return;
+          }
+          const resetData = {
+            condicao: "resetsenha",
+            email: email,
+            password: newPassword
+          };
+          callWebhookPOST(resetData)
+            .then(data => {
+              console.log('Resposta do webhook (Reset):', data);
+              showCustomAlert(data.message || 'Senha redefinida com sucesso.');
+              clearResetFields();
+              instanceReset.style.display = 'none';
+              instanceLogin.style.display = 'block';
+            })
+            .catch(error => {
+              console.error('Erro ao chamar o webhook de redefinição de senha (POST):', error);
+            });
+        });
+      }
+
+      // Função para alternar a visibilidade das senhas
+      function setupPasswordToggleGroup(buttonId, inputIds, iconId) {
+        const button = document.getElementById(buttonId);
+        const icon = document.getElementById(iconId);
+        if (button && icon) {
+          button.addEventListener('click', function(e) {
+            e.preventDefault();
+            let toggleToText = document.getElementById(inputIds[0]).type === 'password';
+            inputIds.forEach(function(id) {
+              const input = document.getElementById(id);
+              if (input) {
+                input.type = toggleToText ? 'text' : 'password';
+              }
+            });
+            if (toggleToText) {
+              icon.classList.remove('fa-eye');
+              icon.classList.add('fa-eye-slash', 'text-blue-600');
+            } else {
+              icon.classList.remove('fa-eye-slash', 'text-blue-600');
+              icon.classList.add('fa-eye', 'text-gray-400');
+            }
+          });
+        }
+      }
+      setupPasswordToggleGroup('toggleLoginPassword', ['password'], 'toggleLoginPasswordIcon');
+      setupPasswordToggleGroup('toggleSignupPassword', ['signup-password', 'signup-password-confirm'], 'toggleSignupPasswordIcon');
+      setupPasswordToggleGroup('toggleResetNewPassword', ['new-password', 'confirm-password'], 'toggleResetNewPasswordIcon');
+
+      // Navegação entre telas da aplicação (Dashboard, Chat etc.)
+      document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          var target = this.getAttribute('data-target');
+          document.querySelectorAll('#content-area > div').forEach(screen => {
+            screen.style.display = 'none';
+          });
+          document.getElementById(target).style.display = 'block';
+          document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('text-blue-600', 'bg-blue-50'));
+          this.classList.add('text-blue-600', 'bg-blue-50');
+        });
+      });
+
+      // ============ LÓGICA DO CHAT E UPLOAD DE XML ============
+      (function setupChat() {
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const xmlFileInput = document.getElementById('xml-file-input');
+
+        function appendUserMessage(message) {
+          const container = document.createElement('div');
+          container.classList.add('w-full', 'mb-2');
+          const userMsgDiv = document.createElement('div');
+          userMsgDiv.classList.add('flex', 'items-center', 'justify-end');
+          userMsgDiv.innerHTML = `
+            <div class="bg-blue-600 text-white rounded-2xl rounded-tr-none p-4">
+              <p>${message}</p>
+            </div>
+            <div class="w-10 h-10 ml-4">
+              <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg" alt="User" class="w-8 h-8 rounded-full">
+            </div>
+          `;
+          container.appendChild(userMsgDiv);
+          chatMessages.appendChild(container);
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        xmlFileInput.addEventListener('change', function() {
+          const file = this.files[0];
+          if (file) {
+            const attachmentPreview = document.getElementById('attachment-preview');
+            const fileURL = URL.createObjectURL(file);
+            attachmentPreview.innerHTML = `
+              <div class="flex items-center p-2 bg-gray-100 rounded-lg">
+                <i class="fa-solid fa-file-code text-gray-600 mr-2 small-text"></i>
+                <a href="${fileURL}" download="${file.name}" class="underline small-text text-gray-600">
+                  ${file.name}
+                </a>
+              </div>
+            `;
+          }
+        });
+
+        function typeWriter(element, text, delay = 5) {
+          let i = 0;
+          element.innerHTML = "";
+          const chatContainer = document.getElementById('chat-messages');
+          function addChar() {
+            if (i < text.length) {
+              element.innerHTML += text.charAt(i);
+              i++;
+              requestAnimationFrame(() => {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+              });
+              setTimeout(addChar, delay);
+            }
+          }
+          addChar();
+        }
+
+        function appendAIMessage(message) {
+          const aiMsgDiv = document.createElement('div');
+          aiMsgDiv.classList.add('flex', 'items-start', 'max-w-3xl', 'mb-2');
+          const iconDiv = document.createElement('div');
+          iconDiv.classList.add('flex-shrink-0', 'w-8', 'h-8', 'rounded-full', 'bg-blue-100', 'flex', 'items-center', 'justify-center', 'mr-4');
+          iconDiv.innerHTML = `<i class="fa-solid fa-robot text-blue-600"></i>`;
+          const textContainer = document.createElement('div');
+          textContainer.classList.add('bg-gray-100', 'rounded-2xl', 'rounded-tl-none', 'p-4', 'ai-response');
+          const pElement = document.createElement('p');
+          pElement.classList.add('text-gray-800');
+          textContainer.appendChild(pElement);
+          aiMsgDiv.appendChild(iconDiv);
+          aiMsgDiv.appendChild(textContainer);
+          chatMessages.appendChild(aiMsgDiv);
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+          typeWriter(pElement, message, 10);
+        }
+
+        // Envia a mensagem via POST; se houver arquivo XML, usa FormData para upload binário
+        async function sendMessageToAI(message, file = null) {
+          if (file) {
+            // Cria um FormData para enviar o arquivo em formato binário
+            const formData = new FormData();
+            formData.append("condicao", "chat");
+            formData.append("mensagem", message);
+            formData.append("xml", file, file.name);
+            fetch(endpointUser, {
+              method: "POST",
+              body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+              const responseText = data.output || data.message;
+              if (responseText) {
+                appendAIMessage(responseText);
+              } else {
+                appendAIMessage("Não foi possível obter uma resposta da IA.");
+              }
+            })
+            .catch(error => {
+              console.error(error);
+              appendAIMessage("Ocorreu um erro ao se comunicar com o servidor. Tente novamente mais tarde.");
+            });
+          } else {
+            // Sem arquivo, envia os dados em JSON
+            fetch(endpointUser, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ condicao: "chat", mensagem: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+              const responseText = data.output || data.message;
+              if (responseText) {
+                appendAIMessage(responseText);
+              } else {
+                appendAIMessage("Não foi possível obter uma resposta da IA.");
+              }
+            })
+            .catch(error => {
+              console.error(error);
+              appendAIMessage("Ocorreu um erro ao se comunicar com o servidor. Tente novamente mais tarde.");
+            });
+          }
+        }
+
+        function handleSendMessage() {
+          const message = userInput.value.trim();
+          const attachedFile = xmlFileInput.files[0] || null;
+          // Exibe o anexo no chat
+          if (attachedFile) {
+            const fileURL = URL.createObjectURL(attachedFile);
+            const attachmentHTML = `
+              <i class="fa-solid fa-file-code text-gray-600 mr-2 small-text"></i>
+              <a href="${fileURL}" download="${attachedFile.name}" class="underline small-text text-gray-600">
+                ${attachedFile.name}
+              </a>
+            `;
+            const container = document.createElement('div');
+            container.classList.add('w-full', 'mb-2');
+            const attachmentBubble = document.createElement('div');
+            attachmentBubble.classList.add('flex', 'items-center', 'justify-end');
+            attachmentBubble.innerHTML = `
+              <div class="flex items-center p-2 bg-gray-100 rounded-lg small-text">
+                ${attachmentHTML}
+              </div>
+            `;
+            container.appendChild(attachmentBubble);
+            chatMessages.appendChild(container);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+          }
+          if (message !== "") {
+            appendUserMessage(message);
+          }
+          sendMessageToAI(message, attachedFile);
+          userInput.value = "";
+          xmlFileInput.value = "";
+          document.getElementById('attachment-preview').innerHTML = "";
+        }
+
+        sendBtn.addEventListener('click', handleSendMessage);
+        userInput.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            handleSendMessage();
+          }
+        });
+        const attachFileButton = document.getElementById('attach-file-button');
+        if (attachFileButton && xmlFileInput) {
+          attachFileButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            xmlFileInput.click();
+          });
+        }
+      })();
+
+      // Atualização de data e hora em tempo real
+      (function updateDateTime() {
+        function refresh() {
+          const now = new Date();
+          let dateString = now.toLocaleDateString('pt-BR', {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+          });
+          dateString = dateString.charAt(0).toUpperCase() + dateString.slice(1);
+          const timeString = now.toLocaleTimeString('pt-BR');
+          document.getElementById('datetime').innerHTML =
+            `${dateString}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${timeString}`;
+        }
+        refresh();
+        setInterval(refresh, 1000);
+      })();
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>
